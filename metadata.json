@@ -1,5 +1,6 @@
 {
   "name": "Fundamentación en Física — Transformaciones de Lorentz",
   "description": "Laboratorio interactivo de Física y Relatividad Especial en español basado en el libro 'Fundamentación en Física': derivación paso a paso de las transformaciones de Lorentz, espacio de Minkowski, dinámica newtoniana, gravitación y electromagnetismo.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

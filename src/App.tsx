@@ -1,29 +1,37 @@
 import React, { useState } from 'react';
-import { EmElectricitySection } from './modules/em/EmElectricitySection';
-import { EmMagnetismSection } from './modules/em/EmMagnetismSection';
-import { EmMaxwellSection } from './modules/em/EmMaxwellSection';
-import { EmQuantumSection } from './modules/em/EmQuantumSection';
-import { EmExercisesSection } from './modules/em/EmExercisesSection';
+import { Download, MessageSquare, Sparkles } from 'lucide-react';
+import { PreliminariesModule } from './modules/PreliminariesModule';
+import { RelativityModule } from './modules/RelativityModule';
+import { DynamicsModule } from './modules/DynamicsModule';
+import { ElectromagnetismModule } from './modules/ElectromagnetismModule';
 import { ArchiveModule } from './modules/ArchiveModule';
+import {
+  HARD_CONCEPTS_BY_CHAPTER,
+  PhysicsChatbotDrawer,
+  type ChapterKey,
+} from './components/PhysicsChatbotDrawer';
 
-type AppSection =
-  | 'electricity'
-  | 'magnetism'
-  | 'maxwell'
-  | 'quantum'
-  | 'exercises'
-  | 'book';
+type TopSection = ChapterKey;
 
-const NAV_ITEMS: Array<{ id: Exclude<AppSection, 'book'>; label: string }> = [
-  { id: 'electricity', label: 'Electricidad' },
-  { id: 'magnetism', label: 'Magnetismo' },
-  { id: 'maxwell', label: 'Maxwell' },
-  { id: 'quantum', label: 'Átomo y Bohr' },
-  { id: 'exercises', label: 'Ejercicios' },
+const NAV_ITEMS: Array<{ id: TopSection; label: string }> = [
+  { id: 'ch1', label: 'Cap. 1 Preliminares' },
+  { id: 'ch2', label: 'Cap. 2 Relatividad' },
+  { id: 'ch3', label: 'Cap. 3 Dinámica' },
+  { id: 'ch4', label: 'Cap. 4 Electromagnetismo' },
+  { id: 'book', label: 'Libro y Figuras' },
 ];
 
 export const App: React.FC = () => {
-  const [section, setSection] = useState<AppSection>('electricity');
+  const [section, setSection] = useState<TopSection>('ch1');
+  const [tutorOpen, setTutorOpen] = useState<boolean>(false);
+  const [queuedQuestion, setQueuedQuestion] = useState<string | null>(null);
+
+  const askTutorConcept = (question: string) => {
+    setQueuedQuestion(question);
+    setTutorOpen(true);
+  };
+
+  const chapterConcepts = HARD_CONCEPTS_BY_CHAPTER[section];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
@@ -33,16 +41,16 @@ export const App: React.FC = () => {
           {/* Zone 1: Single text element Brand wordmark */}
           <button
             type="button"
-            onClick={() => setSection('electricity')}
+            onClick={() => setSection('ch1')}
             className="font-display text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            Capítulo 4 · Electromagnetismo
+            Fundamentación en Física
           </button>
 
           {/* Zone 2: 5 concise single-line nav links */}
           <nav
             className="hidden md:flex items-center gap-6 text-sm font-medium"
-            aria-label="Secciones del Capítulo 4"
+            aria-label="Capítulos del libro"
           >
             {NAV_ITEMS.map((item) => {
               const active = section === item.id;
@@ -65,17 +73,14 @@ export const App: React.FC = () => {
 
           {/* Zone 3: 1 primary action */}
           <div className="flex items-center shrink-0">
-            <button
-              type="button"
-              onClick={() => setSection((prev) => (prev === 'book' ? 'electricity' : 'book'))}
-              className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                section === 'book'
-                  ? 'bg-sky-700 text-white hover:bg-sky-800'
-                  : 'bg-slate-900 text-white hover:bg-slate-800'
-              }`}
+            <a
+              href="/main.pdf"
+              download="Fundamentacion_en_Fisica.pdf"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
             >
-              {section === 'book' ? 'Volver al Cap. 4' : 'Libro Completo'}
-            </button>
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              Descargar PDF
+            </a>
           </div>
         </div>
 
@@ -102,14 +107,44 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Content Container */}
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-        {section === 'electricity' && <EmElectricitySection />}
-        {section === 'magnetism' && <EmMagnetismSection />}
-        {section === 'maxwell' && <EmMaxwellSection />}
-        {section === 'quantum' && <EmQuantumSection />}
-        {section === 'exercises' && <EmExercisesSection />}
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8 space-y-6">
+        {/* Contextual Concept Tutor Strip */}
+        <div className="flex flex-col gap-3 rounded-xl border border-sky-200 bg-sky-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-900 shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-sky-600" aria-hidden="true" />
+              Conceptos difíciles ({chapterConcepts.title}):
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {chapterConcepts.prompts.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => askTutorConcept(item.question)}
+                  className="rounded-md border border-sky-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:border-sky-400 hover:text-sky-900 transition-colors cursor-pointer"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setTutorOpen(true)}
+            className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg bg-sky-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+            Abrir Tutor de Conceptos
+          </button>
+        </div>
+
+        {section === 'ch1' && <PreliminariesModule />}
+        {section === 'ch2' && <RelativityModule />}
+        {section === 'ch3' && <DynamicsModule />}
+        {section === 'ch4' && <ElectromagnetismModule />}
         {section === 'book' && (
-          <ArchiveModule onOpenChapter4={() => setSection('electricity')} />
+          <ArchiveModule onOpenChapter={(chap) => setSection(chap)} />
         )}
       </main>
 
@@ -117,7 +152,7 @@ export const App: React.FC = () => {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-[1440px] flex-col gap-2 px-4 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
           <span>
-            Fundamentación en Física · Capítulo 4: Electromagnetismo (desde main.tex)
+            Fundamentación en Física · Capítulos 1–4 interactivos (desde main.tex)
           </span>
           <div className="flex items-center gap-4">
             <a
@@ -132,11 +167,26 @@ export const App: React.FC = () => {
               onClick={() => setSection('book')}
               className="font-medium text-slate-700 hover:text-slate-900 hover:underline cursor-pointer"
             >
-              Explorar Capítulos 1–3 y Figuras
+              Índice y Figuras
+            </button>
+            <button
+              type="button"
+              onClick={() => setTutorOpen(true)}
+              className="font-medium text-sky-700 hover:text-sky-900 hover:underline cursor-pointer"
+            >
+              Tutor de Conceptos
             </button>
           </div>
         </div>
       </footer>
+
+      <PhysicsChatbotDrawer
+        open={tutorOpen}
+        onOpenChange={setTutorOpen}
+        activeChapter={section}
+        queuedQuestion={queuedQuestion}
+        onConsumeQueuedQuestion={() => setQueuedQuestion(null)}
+      />
     </div>
   );
 };
